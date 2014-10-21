@@ -25,7 +25,15 @@ public class Vec3 {
 	}
 
 	public void normalize() {
-		scale(1.0 / getLength());
+		double length = getLength();
+		if(length > 0.01) {
+			scale(1.0 / length);
+		} else {
+			x = 0.5;
+			y = 0.5;
+			z = 1;
+			normalize();
+		}
 	}
 
 	public double dot(Vec3 v) {
