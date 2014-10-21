@@ -35,9 +35,7 @@ public class Converter {
 		height = height / reduce;
 		img = resampleImage(img, width, height);
 
-		// compute luma level
 		BufferedImage glowResampled = resampleImage(glowImage, width, height);
-
 		BufferedImage indexedImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED, PaletteQ1.indexColorModel);
 
 		// reduce to Quake palette
@@ -82,19 +80,20 @@ public class Converter {
 
 	public BufferedImage renderImage(BufferedImage colorImage, BufferedImage normImage, BufferedImage glowImage) {
 		BufferedImage img = new BufferedImage(normImage.getWidth(), normImage.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
-		Vec3 light = new Vec3(-1, 0, 0);
+		// TODO: find a proper vector
+		Vec3 light = new Vec3(-0.95, -0.95, .75);
 		light.normalize();
 
 		for (int x = 0; x < colorImage.getWidth(); ++x) {
 			for (int y = 0; y < colorImage.getHeight(); ++y) {
 				// read surface normal
 				int normrgb = normImage.getRGB(x, y);
-				Vec3 normal = new Vec3(Color.getR(normrgb) - 128, Color.getG(normrgb) - 128, Color.getB(normrgb) - 128);
+				Vec3 normal = new Vec3((Color.getR(normrgb) - 128) / 128.0, (Color.getG(normrgb) - 128) / 128.0, (Color.getB(normrgb) - 128) / 128.0);
 				normal.normalize();
 
 				// apply lighting
 				int color = colorImage.getRGB(x, y);
-				color = Color.dim(color, normal.dot(light).getLength());
+				color = Color.dim(color, normal.dot(light));
 
 				// add glow map
 				if (glowImage != null) {
