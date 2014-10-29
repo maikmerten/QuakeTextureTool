@@ -1,7 +1,11 @@
 package de.maikmerten.quaketexturetool;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,23 +14,35 @@ import java.util.List;
  */
 public class Wad {
 	
+	private List<WadEntry> entries = new ArrayList<>();
+	private WadHeader wadHeader = new WadHeader();
+	
+	
 	private class WadHeader {
 		private byte[] magic = "WAD2".getBytes(Charset.forName("US-ASCII"));
-		private int numentries;
-		private int diroffset;
+		private int numentries = -1;
+		private int diroffset = -1;
 
 		private int getSize() {
 			return 12;
 		}
 		
 		private void write(OutputStream os) throws Exception {
+			if(numentries < 0) {
+				throw new Exception("WadHeader numentries not set");
+			}
+			
+			if(diroffset < 0) {
+				throw new Exception("WadHeader diroffset not set");
+			}
+			
 			os.write(magic);
 			Wad.writeLittle(numentries, os);
 			Wad.writeLittle(diroffset, os);
 		}
 	}
 	
-	private class WadEntry {
+	private class WadDirEntry {
 		int offset = -1; // position of entry in WAD
 		int dsize; // size of entry in WAD
 		int size; // size in memory
@@ -51,6 +67,17 @@ public class Wad {
 		}
 		
 	}
+	
+	private class WadEntry {
+		private WadDirEntry dirEntry;
+		private byte[] data;
+		
+		private void write(OutputStream os) throws Exception {
+			dirEntry.write(os);
+			os.write(data);
+		}
+	}
+	
 	
 	private class MipTexHeader {
 		private byte[] name = new byte[16]; // zero terminated
@@ -81,7 +108,7 @@ public class Wad {
 	}
 	
 	
-	public void addMipTexture(String name, List<byte[][]> mipData) {
+	public void addMipTexture(String name, List<byte[][]> mipData) throws Exception {
 		
 		MipTexHeader mipHead = new MipTexHeader();
 		byte[] namebytes = name.getBytes(Charset.forName("US-ASCII"));
@@ -99,12 +126,82 @@ public class Wad {
 			offset += mip.length * mip[0].length;
 		}
 		
-		WadEntry wentry = new WadEntry();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		mipHead.write(baos);
+		for(int i = 0; i < mipData.size(); ++i) {
+			byte[][] mip = mipData.get(i);
+			for(int x = 0; x < mip.length; ++x) {
+				baos.write(mip[x]);
+			}
+		}
+		
+		byte[] entryData = baos.toByteArray();
+		
+		WadDirEntry wentry = new WadDirEntry();
 		wentry.type = 0x44;
-		wentry.dsize = offset;
-		wentry.size = offset;
+		wentry.dsize = entryData.length;
+		wentry.size = entryData.length;
 		wentry.compression = 0;
 		wentry.name = mipHead.name;
+		
+		
+		WadEntry wadEntry = new WadEntry();
+		wadEntry.dirEntry = wentry;
+		wadEntry.data = entryData;
+		entries.add(wadEntry);
+		
+	}
+	
+	
+	private void computeOffsets() {
+		int offset = wadHeader.getSize();
+		for(WadEntry wadEntry : entries) {
+			wadEntry.dirEntry.offset = offset;
+			offset += wadEntry.data.length;
+		}
+		
+		wadHeader.diroffset = offset;
+		wadHeader.numentries = entries.size();
+	}
+	
+	
+	public void write(OutputStream os) throws Exception {
+		computeOffsets();
+		
+		// write initial WAD header
+		wadHeader.write(os);
+		
+		// write data for all entries
+		for(WadEntry entry : entries) {
+			os.write(entry.data);
+		}
+		
+		// finish with WAD directory
+		for(WadEntry entry : entries) {
+			entry.dirEntry.write(os);
+		}
+		
+	}
+	
+	
+	public static void main(String[] args) throws Exception {
+		
+		byte[][] mip0 = new byte[16][16];
+		byte[][] mip1 = new byte[8][8];
+		byte[][] mip2 = new byte[4][4];
+		byte[][] mip3 = new byte[2][2];
+		
+		List<byte[][]> mips = new ArrayList<>(4);
+		mips.add(mip0);
+		mips.add(mip1);
+		mips.add(mip2);
+		mips.add(mip3);
+		
+		Wad wad = new Wad();
+		wad.addMipTexture("abcde", mips);
+		
+		FileOutputStream fos = new FileOutputStream(new File("/tmp/test.wad"));
+		wad.write(fos);
 		
 	}
 	
