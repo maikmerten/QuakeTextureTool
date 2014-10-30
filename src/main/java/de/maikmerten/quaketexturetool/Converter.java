@@ -1,11 +1,11 @@
 package de.maikmerten.quaketexturetool;
 
-import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import javax.imageio.ImageIO;
+import org.imgscalr.Scalr;
 
 /**
  *
@@ -140,13 +140,7 @@ public class Converter {
 			return img;
 		}
 
-		BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
-		Graphics g = newImage.createGraphics();
-		g.drawImage(img, 0, 0, width, height, null);
-		g.dispose();
-
-		return newImage;
+		return Scalr.resize(img, Scalr.Method.QUALITY, width, height);
 	}
 
 }
