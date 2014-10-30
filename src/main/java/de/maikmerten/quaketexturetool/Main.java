@@ -27,7 +27,7 @@ public class Main {
 		List<File> colorMaps = new ArrayList<>();
 		for (File f : workingDir.listFiles()) {
 			String fname = f.getName();
-			if (f.isDirectory() || !fname.endsWith(".png") || fname.endsWith("_norm.png") || fname.endsWith("_glow.png") || fname.endsWith("_gloss.png")) {
+			if (f.isDirectory() || !fname.endsWith(".png") || fname.contains("_norm.") || fname.contains("_glow.") || fname.contains("_gloss.")) {
 				continue;
 			}
 			colorMaps.add(f);
@@ -60,6 +60,9 @@ public class Main {
 			name = name.substring(0, name.length() - 4);
 
 			System.out.println(name);
+			if(name.length() > 15) {
+				System.out.println("  name too long (will be truncated to 15 characters): " + name);
+			}
 			
 			wad.addMipTexture(name, result);
 		}
