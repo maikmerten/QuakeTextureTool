@@ -1,12 +1,11 @@
 package de.maikmerten.quaketexturetool;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import javax.imageio.ImageIO;
 
 /**
  *
@@ -33,18 +32,19 @@ public class Main {
 			}
 			colorMaps.add(f);
 		}
+		
+		Wad wad = new Wad();
 
 		for (File colorFile : colorMaps) {
 			String basepath = colorFile.getAbsolutePath();
 			String normpath = basepath.substring(0, basepath.length() - 4) + "_norm.png";
 			String glowpath = basepath.substring(0, basepath.length() - 4) + "_glow.png";
 
+			InputStream normInput = null;
 			File normFile = new File(normpath);
-			if (!normFile.exists()) {
-				System.out.println(normpath + " does not exist, skipping " + basepath);
-				continue;
+			if (normFile.exists()) {
+				normInput = new FileInputStream(normFile);
 			}
-			InputStream normInput = new FileInputStream(normFile);
 
 			InputStream glowInput = null;
 			File glowFile = new File(glowpath);
@@ -54,16 +54,20 @@ public class Main {
 
 			InputStream colorInput = new FileInputStream(colorFile);
 
-			BufferedImage result = conv.convert(colorInput, normInput, glowInput, reduce);
+			List<byte[][]> result = conv.convert(colorInput, normInput, glowInput, reduce);
 
 			String name = colorFile.getName();
-			name = name.substring(0, name.length() - 4) + ".png";
-			File outFile = new File(outputDir.getAbsolutePath() + File.separator + name);
-			System.out.println(outFile.getAbsolutePath());
+			name = name.substring(0, name.length() - 4);
 
-			ImageIO.write(result, "png", outFile);
-
+			System.out.println(name);
+			
+			wad.addMipTexture(name, result);
 		}
+		
+		File wadFile = new File(outputDir.getAbsolutePath() + File.separator + "output.wad");
+		FileOutputStream fos = new FileOutputStream(wadFile);
+		wad.write(fos);
+		fos.close();
 
 	}
 

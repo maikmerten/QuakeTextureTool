@@ -115,8 +115,8 @@ public class Wad {
 		for(int i = 0; i < Math.min(15, namebytes.length); ++i) {
 			mipHead.name[i] = namebytes[i];
 		}
-		mipHead.width = mipData.get(0).length;
-		mipHead.height = mipData.get(0)[0].length;
+		mipHead.height = mipData.get(0).length;
+		mipHead.width = mipData.get(0)[0].length;
 		
 		mipHead.mipOffsets = new int[mipData.size()];
 		int offset = mipHead.getSize();
@@ -190,6 +190,18 @@ public class Wad {
 		byte[][] mip1 = new byte[8][8];
 		byte[][] mip2 = new byte[4][4];
 		byte[][] mip3 = new byte[2][2];
+		
+		
+		byte[] row = mip0[0];
+		for(int i = 0; i < row.length; ++i) {
+			row[i] = (byte)0xFF;
+		}
+		
+		row = mip0[1];
+		for(int i = 0; i < row.length; ++i) {
+			row[i] = (byte)254;
+		}
+		
 		
 		List<byte[][]> mips = new ArrayList<>(4);
 		mips.add(mip0);
