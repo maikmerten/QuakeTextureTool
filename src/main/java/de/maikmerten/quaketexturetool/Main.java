@@ -6,16 +6,42 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.cli.BasicParser;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.PosixParser;
 
 /**
  *
  * @author maik
  */
 public class Main {
+	
+	private final static String opt_reduce = "reduce";
 
 	public static void main(String[] args) throws Exception {
+		
+		
+		
+		// set up command line parsing
+		Options opts = new Options();
+		opts.addOption("h", "help", false, "Displays help");
+		opts.addOption(opt_reduce, true, "Downsampling factor (default: 4)");
+		
+		CommandLineParser parser = new PosixParser();
+		CommandLine cmd = parser.parse(opts, args);
+		
+		if(cmd.hasOption("help") || cmd.hasOption("h")) {
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp("java -jar QuakeTextureTool.jar", opts);
+			System.exit(0);
+		}
+		
+		int reduce = Integer.parseInt(cmd.getOptionValue(opt_reduce, "4"));
 
-		int reduce = 4;
+		
 		Converter conv = new Converter();
 
 		File workingDir = new File(".");
