@@ -1,12 +1,12 @@
 package de.maikmerten.quaketexturetool;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -50,32 +50,39 @@ public class Main {
 			outputDir.mkdirs();
 		}
 
-		List<File> colorMaps = new ArrayList<>();
+		List<File> colorMapFiles = new ArrayList<>();
+		FileFilter filefilter = new ColorMapFileFilter();
 		for (File f : workingDir.listFiles()) {
-			String fname = f.getName();
-			if (f.isDirectory() || !fname.endsWith(".png") || fname.contains("_norm.") || fname.contains("_glow.") || fname.contains("_gloss.")) {
-				continue;
+			if(filefilter.accept(f)) {
+				colorMapFiles.add(f);
 			}
-			colorMaps.add(f);
 		}
 		
 		Wad wad = new Wad();
 
-		for (File colorFile : colorMaps) {
+		for (File colorFile : colorMapFiles) {
 			String basepath = colorFile.getAbsolutePath();
-			String normpath = basepath.substring(0, basepath.length() - 4) + "_norm.png";
-			String glowpath = basepath.substring(0, basepath.length() - 4) + "_glow.png";
 
+			// try to find file with surface normals
+			String normpath = basepath.substring(0, basepath.length() - 4) + "_norm.png";
 			InputStream normInput = null;
 			File normFile = new File(normpath);
 			if (normFile.exists()) {
 				normInput = new FileInputStream(normFile);
 			}
 
+			// try to find file with luminance information
+			String glowpath = basepath.substring(0, basepath.length() - 4) + "_glow.png";
 			InputStream glowInput = null;
 			File glowFile = new File(glowpath);
 			if (glowFile.exists()) {
 				glowInput = new FileInputStream(glowFile);
+			} else {
+				glowpath = basepath.substring(0, basepath.length() - 4) + "_luma.png";
+				glowFile = new File(glowpath);
+				if(glowFile.exists()) {
+					glowInput = new FileInputStream(glowFile);
+				}
 			}
 
 			InputStream colorInput = new FileInputStream(colorFile);
@@ -94,9 +101,9 @@ public class Main {
 		}
 		
 		File wadFile = new File(outputDir.getAbsolutePath() + File.separator + "output.wad");
-		FileOutputStream fos = new FileOutputStream(wadFile);
-		wad.write(fos);
-		fos.close();
+		try (FileOutputStream fos = new FileOutputStream(wadFile)) {
+			wad.write(fos);
+		}
 
 	}
 
