@@ -84,7 +84,14 @@ public class Converter {
 
 				for (int i = firstIdx; i <= lastIdx; ++i) {
 					int color2 = PaletteQ1.colors[i];
-					double distance = Color.getDistance(color1, color2);
+					double distance = Double.MAX_VALUE;
+					
+					if(firstIdx == PaletteQ1.fullbrightStart) {
+						distance = Color.getDistancePlain(color1, color2);
+					} else {
+						distance = Color.getDistanceYPrPb(color1, color2);
+					}
+					
 					if (distance < minDistance) {
 						index = i;
 						minDistance = distance;

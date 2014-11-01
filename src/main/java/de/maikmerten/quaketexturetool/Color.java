@@ -41,7 +41,7 @@ public class Color {
 		return (0.299 * r1 + 0.587 * g1 + 0.114 * b1) / 263.0;
 	}
 
-	public static double getDistance(int color1, int color2) {
+	public static double getDistanceYPrPb(int color1, int color2) {
 
 		int r1 = getR(color1);
 		int r2 = getR(color2);
@@ -64,7 +64,15 @@ public class Color {
 		double dpb = pb1 - pb2;
 		double dpr = pr1 - pr2;
 
-		return Math.sqrt(dy * dy + dpb * dpb + dpr * dpr);
+		return dy * dy + dpb * dpb + dpr * dpr;
+	}
+	
+	public static double getDistancePlain(int color1, int color2) {
+		int rdiff = getR(color1) - getR(color2);
+		int gdiff = getG(color1) - getG(color2);
+		int bdiff = getB(color1) - getB(color2);
+		
+		return rdiff*rdiff + gdiff*gdiff + bdiff*bdiff;
 	}
 
 	public static int add(int color1, int color2) {
