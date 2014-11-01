@@ -91,6 +91,19 @@ public class Color {
 		return getRGB(r, g, b);
 
 	}
+	
+	public static int add(int color, int r, int g, int b) {
+		int r1 = getR(color);
+		int g1 = getG(color);
+		int b1 = getB(color);
+
+		int r2 = clampChannel(r1 + r);
+		int g2 = clampChannel(g1 + g);
+		int b2 = clampChannel(b1 + b);
+
+		return getRGB(r2, g2, b2);
+
+	}
 
 	public static int dim(int color, double factor) {
 		factor = Math.min(1.0, factor);

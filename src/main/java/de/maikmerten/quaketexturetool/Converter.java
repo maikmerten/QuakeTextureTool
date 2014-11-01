@@ -99,6 +99,11 @@ public class Converter {
 				}
 
 				mip[y][x] = (byte)(index & 0xFF);
+				
+				if(firstIdx < PaletteQ1.fullbrightStart) {
+					dither(img, x, y, color1, PaletteQ1.colors[index]);
+				}
+				
 			}
 		}
 		
@@ -136,6 +141,41 @@ public class Converter {
 		}
 
 		return img;
+	}
+	
+	private void dither(BufferedImage img, int x, int y, int targetColor, int actualColor) {
+
+		int dR = Color.getR(targetColor) - Color.getR(actualColor);
+		int dG = Color.getG(targetColor) - Color.getG(actualColor);
+		int dB = Color.getB(targetColor) - Color.getB(actualColor);
+
+		if ((x + 1) < img.getWidth()) {
+			float w = 7f / 16f;
+			int neighbour = img.getRGB(x + 1, y);
+			neighbour = Color.add(neighbour, (int)((dR * w) + .5f), (int)((dG * w) + .5f), (int)((dB * w) +.5f));
+			img.setRGB(x + 1, y, neighbour);
+		}
+		
+		if ((x + 1) < img.getWidth() && (y + 1) < img.getHeight()) {
+			float w = 1f / 16f;
+			int neighbour = img.getRGB(x + 1, y + 1);
+			neighbour = Color.add(neighbour, (int)((dR * w) + .5f), (int)((dG * w) + .5f), (int)((dB * w) +.5f));
+			img.setRGB(x + 1, y + 1, neighbour);
+		}
+		
+		if ((y + 1) < img.getHeight()) {
+			float w = 5f / 16f;
+			int neighbour = img.getRGB(x, y + 1);
+			neighbour = Color.add(neighbour, (int)((dR * w) + .5f), (int)((dG * w) + .5f), (int)((dB * w) +.5f));
+			img.setRGB(x, y + 1, neighbour);
+		}
+		
+		if ((x - 1) >= 0 && (y + 1) < img.getHeight()) {
+			float w = 3f / 16f;
+			int neighbour = img.getRGB(x - 1, y + 1);
+			neighbour = Color.add(neighbour, (int)((dR * w) + .5f), (int)((dG * w) + .5f), (int)((dB * w) +.5f));
+			img.setRGB(x - 1, y + 1, neighbour);
+		}
 	}
 
 	public BufferedImage resampleImage(BufferedImage img, int width, int height) {
