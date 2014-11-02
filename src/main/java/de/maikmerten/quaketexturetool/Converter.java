@@ -13,10 +13,10 @@ import org.imgscalr.Scalr;
  */
 public class Converter {
 
-	private final double fullbrightThresh = 0.125;
+	private final double fullbrightThresh = 0.05;
 	private final boolean showFullbright = !true;
 
-	public List<byte[][]> convert(InputStream colorStream, InputStream normStream, InputStream glowStream, int reduce) throws Exception {
+	public List<byte[][]> convert(InputStream colorStream, InputStream normStream, InputStream glowStream, int reduce, boolean ditherFullbrights) throws Exception {
 
 		BufferedImage colorImage = ImageIO.read(colorStream);
 		int width = colorImage.getWidth();
@@ -43,7 +43,7 @@ public class Converter {
 		
 		// generate four MIP images
 		for(int i = 0; i < 4; ++i) {
-			byte[][] mip = createMip(img, glowImage, (width >> i), (height >> i));
+			byte[][] mip = createMip(img, glowImage, (width >> i), (height >> i), ditherFullbrights);
 			mips.add(mip);
 		}
 		
@@ -51,7 +51,7 @@ public class Converter {
 	}
 	
 	
-	private byte[][] createMip(BufferedImage renderedImage, BufferedImage glowImage, int width, int height) {
+	private byte[][] createMip(BufferedImage renderedImage, BufferedImage glowImage, int width, int height, boolean ditherFullbrights) {
 		byte[][] mip = new byte[height][width];
 
 		// resize to requested dimensions
@@ -87,7 +87,7 @@ public class Converter {
 					double distance = Double.MAX_VALUE;
 					
 					if(firstIdx == PaletteQ1.fullbrightStart) {
-						distance = Color.getDistancePlain(color1, color2);
+						distance = Color.getDistanceYPrPb(color1, color2);
 					} else {
 						distance = Color.getDistanceYPrPb(color1, color2);
 					}
@@ -100,7 +100,7 @@ public class Converter {
 
 				mip[y][x] = (byte)(index & 0xFF);
 				
-				if(firstIdx < PaletteQ1.fullbrightStart) {
+				if(firstIdx < PaletteQ1.fullbrightStart || ditherFullbrights) {
 					dither(img, x, y, color1, PaletteQ1.colors[index]);
 				}
 				

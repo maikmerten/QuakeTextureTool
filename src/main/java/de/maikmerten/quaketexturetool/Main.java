@@ -20,6 +20,7 @@ import org.apache.commons.cli.PosixParser;
 public class Main {
 	
 	private final static String opt_reduce = "reduce";
+	private final static String opt_ditherfull = "ditherfullbrights";
 
 	public static void main(String[] args) throws Exception {
 		
@@ -29,6 +30,7 @@ public class Main {
 		Options opts = new Options();
 		opts.addOption("h", "help", false, "Displays help");
 		opts.addOption(opt_reduce, true, "Downsampling factor (default: 4)");
+		opts.addOption(opt_ditherfull, true, "Dither fullbrights (default: 0)");
 		
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = parser.parse(opts, args);
@@ -40,6 +42,7 @@ public class Main {
 		}
 		
 		int reduce = Integer.parseInt(cmd.getOptionValue(opt_reduce, "4"));
+		boolean ditherFullbrights = Integer.parseInt(cmd.getOptionValue(opt_ditherfull, "0")) != 0;
 
 		
 		Converter conv = new Converter();
@@ -87,7 +90,7 @@ public class Main {
 
 			InputStream colorInput = new FileInputStream(colorFile);
 
-			List<byte[][]> result = conv.convert(colorInput, normInput, glowInput, reduce);
+			List<byte[][]> result = conv.convert(colorInput, normInput, glowInput, reduce, ditherFullbrights);
 
 			String name = colorFile.getName();
 			name = name.substring(0, name.length() - 4);
