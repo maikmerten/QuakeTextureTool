@@ -15,8 +15,11 @@ public class Converter {
 
 	private final double fullbrightThresh = 0.05;
 	private final boolean showFullbright = !true;
+	
+	private boolean ditherFullbrights = false;
+	private int reduce = 4;
 
-	public List<byte[][]> convert(InputStream colorStream, InputStream normStream, InputStream glowStream, int reduce, boolean ditherFullbrights) throws Exception {
+	public List<byte[][]> convert(InputStream colorStream, InputStream normStream, InputStream glowStream) throws Exception {
 
 		BufferedImage colorImage = ImageIO.read(colorStream);
 		int width = colorImage.getWidth();
@@ -36,22 +39,32 @@ public class Converter {
 
 		BufferedImage img = renderImage(colorImage, normImage, glowImage);
 		
-		width = width / reduce;
-		height = height / reduce;
+		width = width / getReduce();
+		height = height / getReduce();
 		
 		List<byte[][]> mips = new ArrayList<>(4);
 		
 		// generate four MIP images
 		for(int i = 0; i < 4; ++i) {
-			byte[][] mip = createMip(img, glowImage, (width >> i), (height >> i), ditherFullbrights);
+			byte[][] mip = createMip(img, glowImage, (width >> i), (height >> i));
 			mips.add(mip);
 		}
 		
 		return mips;
 	}
 	
+	private boolean isFullbright(BufferedImage glowImg, int x, int y) {
+		if(glowImg == null) {
+			return false;
+		}
+		
+		int lumapixel = glowImg.getRGB(x, y);
+		double luma = Color.getY(lumapixel);
+		return luma > fullbrightThresh;
+	}
 	
-	private byte[][] createMip(BufferedImage renderedImage, BufferedImage glowImage, int width, int height, boolean ditherFullbrights) {
+	
+	private byte[][] createMip(BufferedImage renderedImage, BufferedImage glowImage, int width, int height) {
 		byte[][] mip = new byte[height][width];
 
 		// resize to requested dimensions
@@ -65,15 +78,10 @@ public class Converter {
 				int index = 0;
 				int color1 = img.getRGB(x, y);
 
-				double luma = 0.0;
-				if (glowResampled != null) {
-					luma = Color.getY(glowResampled.getRGB(x, y));
-				}
-
 				int firstIdx = 0;
 				int lastIdx = PaletteQ1.fullbrightStart - 1;
-
-				if (luma > fullbrightThresh) {
+				
+				if (isFullbright(glowResampled, x, y)) {
 					if (showFullbright) {
 						firstIdx = lastIdx = 251;
 					} else {
@@ -100,8 +108,8 @@ public class Converter {
 
 				mip[y][x] = (byte)(index & 0xFF);
 				
-				if(firstIdx < PaletteQ1.fullbrightStart || ditherFullbrights) {
-					dither(img, x, y, color1, PaletteQ1.colors[index]);
+				if(firstIdx < PaletteQ1.fullbrightStart || getDitherFullbrights()) {
+					dither(img, x, y, color1, PaletteQ1.colors[index], glowResampled);
 				}
 				
 			}
@@ -143,34 +151,34 @@ public class Converter {
 		return img;
 	}
 	
-	private void dither(BufferedImage img, int x, int y, int targetColor, int actualColor) {
+	private void dither(BufferedImage img, int x, int y, int targetColor, int actualColor, BufferedImage glowImg) {
 
 		int dR = Color.getR(targetColor) - Color.getR(actualColor);
 		int dG = Color.getG(targetColor) - Color.getG(actualColor);
 		int dB = Color.getB(targetColor) - Color.getB(actualColor);
 
-		if ((x + 1) < img.getWidth()) {
+		if ((x + 1) < img.getWidth() && !(isFullbright(glowImg, x + 1, y) && !ditherFullbrights)) {
 			float w = 7f / 16f;
 			int neighbour = img.getRGB(x + 1, y);
 			neighbour = Color.add(neighbour, (int)((dR * w) + .5f), (int)((dG * w) + .5f), (int)((dB * w) +.5f));
 			img.setRGB(x + 1, y, neighbour);
 		}
 		
-		if ((x + 1) < img.getWidth() && (y + 1) < img.getHeight()) {
+		if ((x + 1) < img.getWidth() && (y + 1) < img.getHeight() && !(isFullbright(glowImg, x + 1, y + 1) && !ditherFullbrights)) {
 			float w = 1f / 16f;
 			int neighbour = img.getRGB(x + 1, y + 1);
 			neighbour = Color.add(neighbour, (int)((dR * w) + .5f), (int)((dG * w) + .5f), (int)((dB * w) +.5f));
 			img.setRGB(x + 1, y + 1, neighbour);
 		}
 		
-		if ((y + 1) < img.getHeight()) {
+		if ((y + 1) < img.getHeight() && !(isFullbright(glowImg, x, y + 1) && !ditherFullbrights)) {
 			float w = 5f / 16f;
 			int neighbour = img.getRGB(x, y + 1);
 			neighbour = Color.add(neighbour, (int)((dR * w) + .5f), (int)((dG * w) + .5f), (int)((dB * w) +.5f));
 			img.setRGB(x, y + 1, neighbour);
 		}
 		
-		if ((x - 1) >= 0 && (y + 1) < img.getHeight()) {
+		if ((x - 1) >= 0 && (y + 1) < img.getHeight() && !(isFullbright(glowImg, x - 1, y + 1) && !ditherFullbrights)) {
 			float w = 3f / 16f;
 			int neighbour = img.getRGB(x - 1, y + 1);
 			neighbour = Color.add(neighbour, (int)((dR * w) + .5f), (int)((dG * w) + .5f), (int)((dB * w) +.5f));
@@ -188,6 +196,23 @@ public class Converter {
 		}
 
 		return Scalr.resize(img, Scalr.Method.QUALITY, width, height);
+	}
+
+
+	public boolean getDitherFullbrights() {
+		return ditherFullbrights;
+	}
+
+	public void setDitherFullbrights(boolean ditherFullbrights) {
+		this.ditherFullbrights = ditherFullbrights;
+	}
+
+	public int getReduce() {
+		return reduce;
+	}
+
+	public void setReduce(int reduce) {
+		this.reduce = reduce;
 	}
 
 }

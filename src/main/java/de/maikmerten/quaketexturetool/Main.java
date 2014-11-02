@@ -46,6 +46,8 @@ public class Main {
 
 		
 		Converter conv = new Converter();
+		conv.setReduce(reduce);
+		conv.setDitherFullbrights(ditherFullbrights);
 
 		File workingDir = new File(".");
 		File outputDir = new File(workingDir.getAbsoluteFile() + File.separator + "output" + File.separator);
@@ -90,7 +92,7 @@ public class Main {
 
 			InputStream colorInput = new FileInputStream(colorFile);
 
-			List<byte[][]> result = conv.convert(colorInput, normInput, glowInput, reduce, ditherFullbrights);
+			List<byte[][]> result = conv.convert(colorInput, normInput, glowInput);
 
 			String name = colorFile.getName();
 			name = name.substring(0, name.length() - 4);
