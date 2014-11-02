@@ -122,6 +122,7 @@ public class Converter {
 	public BufferedImage renderImage(BufferedImage colorImage, BufferedImage normImage, BufferedImage glowImage) {
 		BufferedImage img = new BufferedImage(colorImage.getWidth(), colorImage.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
 		Vec3 light = new Vec3(0.25, 0.25, 1);
+		Vec3 normal = new Vec3(0, 0, 1);
 		light.normalize();
 
 		for (int x = 0; x < colorImage.getWidth(); ++x) {
@@ -131,7 +132,7 @@ public class Converter {
 				if(normImage != null) {
 					// read surface normal
 					int normrgb = normImage.getRGB(x, y);
-					Vec3 normal = new Vec3(Color.getR(normrgb), Color.getG(normrgb), Color.getB(normrgb));
+					normal.setValues(Color.getR(normrgb), Color.getG(normrgb), Color.getB(normrgb));
 					normal.normalize();
 
 					// apply lighting
