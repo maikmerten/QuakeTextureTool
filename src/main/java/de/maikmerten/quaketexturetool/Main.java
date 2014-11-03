@@ -2,11 +2,11 @@ package de.maikmerten.quaketexturetool;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -55,7 +55,7 @@ public class Main {
 			outputDir.mkdirs();
 		}
 
-		List<File> colorMapFiles = new ArrayList<>();
+		Queue<File> colorMapFiles = new LinkedList<>();
 		FileFilter filefilter = new ColorMapFileFilter();
 		for (File f : workingDir.listFiles()) {
 			if(filefilter.accept(f)) {
@@ -65,45 +65,17 @@ public class Main {
 		
 		Wad wad = new Wad();
 
-		for (File colorFile : colorMapFiles) {
-			String basepath = colorFile.getAbsolutePath();
-
-			// try to find file with surface normals
-			String normpath = basepath.substring(0, basepath.length() - 4) + "_norm.png";
-			InputStream normInput = null;
-			File normFile = new File(normpath);
-			if (normFile.exists()) {
-				normInput = new FileInputStream(normFile);
-			}
-
-			// try to find file with luminance information
-			String glowpath = basepath.substring(0, basepath.length() - 4) + "_glow.png";
-			InputStream glowInput = null;
-			File glowFile = new File(glowpath);
-			if (glowFile.exists()) {
-				glowInput = new FileInputStream(glowFile);
-			} else {
-				glowpath = basepath.substring(0, basepath.length() - 4) + "_luma.png";
-				glowFile = new File(glowpath);
-				if(glowFile.exists()) {
-					glowInput = new FileInputStream(glowFile);
-				}
-			}
-
-			InputStream colorInput = new FileInputStream(colorFile);
-
-			List<byte[][]> result = conv.convert(colorInput, normInput, glowInput);
-
-			String name = colorFile.getName();
-			name = name.substring(0, name.length() - 4);
-
-			System.out.println(name);
-			if(name.length() > 15) {
-				System.out.println("  name too long (will be truncated to 15 characters): " + name);
-			}
-			
-			wad.addMipTexture(name, result);
+		List<Thread> threads = new ArrayList<>();
+		for(int i = 0; i < Runtime.getRuntime().availableProcessors(); ++i) {
+			Thread t = new ConverterThread(colorMapFiles, conv, wad);
+			threads.add(t);
+			t.start();
 		}
+		
+		for(Thread t : threads) {
+			t.join();
+		}
+		
 		
 		File wadFile = new File(outputDir.getAbsolutePath() + File.separator + "output.wad");
 		try (FileOutputStream fos = new FileOutputStream(wadFile)) {
