@@ -19,7 +19,7 @@ public class Converter {
 	private boolean ditherFullbrights = false;
 	private int reduce = 4;
 
-	public List<byte[][]> convert(InputStream colorStream, InputStream normStream, InputStream glowStream) throws Exception {
+	public List<byte[][]> convert(InputStream colorStream, InputStream normStream, InputStream glowStream, boolean ignoreFullbrights) throws Exception {
 
 		BufferedImage colorImage = ImageIO.read(colorStream);
 		int width = colorImage.getWidth();
@@ -46,7 +46,7 @@ public class Converter {
 		
 		// generate four MIP images
 		for(int i = 0; i < 4; ++i) {
-			byte[][] mip = createMip(img, glowImage, (width >> i), (height >> i));
+			byte[][] mip = createMip(img, glowImage, (width >> i), (height >> i), ignoreFullbrights);
 			mips.add(mip);
 		}
 		
@@ -64,7 +64,7 @@ public class Converter {
 	}
 	
 	
-	private byte[][] createMip(BufferedImage renderedImage, BufferedImage glowImage, int width, int height) {
+	private byte[][] createMip(BufferedImage renderedImage, BufferedImage glowImage, int width, int height, boolean ignoreFullbrights) {
 		byte[][] mip = new byte[height][width];
 
 		// resize to requested dimensions
@@ -81,7 +81,7 @@ public class Converter {
 				int firstIdx = 0;
 				int lastIdx = PaletteQ1.fullbrightStart - 1;
 				
-				if (isFullbright(glowResampled, x, y)) {
+				if (isFullbright(glowResampled, x, y) && !ignoreFullbrights) {
 					if (showFullbright) {
 						firstIdx = lastIdx = 251;
 					} else {

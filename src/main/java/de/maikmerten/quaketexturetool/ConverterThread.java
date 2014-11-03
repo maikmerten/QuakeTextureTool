@@ -15,11 +15,17 @@ public class ConverterThread extends Thread {
 	private final Queue<File> fileQueue;
 	private final Converter conv;
 	private final Wad wad;
+	private final boolean noLiquidFullbrights;
 
-	public ConverterThread(Queue<File> fileQueue, Converter conv, Wad wad) {
+	public ConverterThread(Queue<File> fileQueue, Converter conv, Wad wad, boolean noLiquidFullbrights) {
 		this.fileQueue = fileQueue;
 		this.conv = conv;
 		this.wad = wad;
+		this.noLiquidFullbrights = noLiquidFullbrights;
+	}
+
+	private boolean isLiquid(String name) {
+		return name.startsWith("*");
 	}
 
 	@Override
@@ -41,6 +47,9 @@ public class ConverterThread extends Thread {
 
 			// find files and convert
 			try {
+				name = colorFile.getName();
+				name = name.substring(0, name.length() - 4);
+
 				String basepath = colorFile.getAbsolutePath();
 
 				// try to find file with surface normals
@@ -50,6 +59,7 @@ public class ConverterThread extends Thread {
 				if (normFile.exists()) {
 					normInput = new FileInputStream(normFile);
 				}
+
 
 				// try to find file with luminance information
 				String glowpath = basepath.substring(0, basepath.length() - 4) + "_glow.png";
@@ -67,10 +77,9 @@ public class ConverterThread extends Thread {
 
 				InputStream colorInput = new FileInputStream(colorFile);
 
-				result = conv.convert(colorInput, normInput, glowInput);
+				boolean ignoreFullbrights = isLiquid(name) && noLiquidFullbrights;
 
-				name = colorFile.getName();
-				name = name.substring(0, name.length() - 4);
+				result = conv.convert(colorInput, normInput, glowInput, ignoreFullbrights);
 
 				System.out.println(name);
 				if (name.length() > 15) {
@@ -81,7 +90,7 @@ public class ConverterThread extends Thread {
 				e.printStackTrace();
 				break;
 			}
-			
+
 			// write result to WAD
 			synchronized (wad) {
 				try {

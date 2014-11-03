@@ -21,6 +21,7 @@ public class Main {
 	
 	private final static String opt_reduce = "reduce";
 	private final static String opt_ditherfull = "ditherfullbrights";
+	private final static String opt_noliquidfullbrights = "noliquidfullbrights";
 
 	public static void main(String[] args) throws Exception {
 		
@@ -31,6 +32,7 @@ public class Main {
 		opts.addOption("h", "help", false, "Displays help");
 		opts.addOption(opt_reduce, true, "Downsampling factor (default: 4)");
 		opts.addOption(opt_ditherfull, true, "Dither fullbrights (default: 0)");
+		opts.addOption(opt_noliquidfullbrights, true, "No fullbrights for liquids (default: 1)");
 		
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = parser.parse(opts, args);
@@ -43,6 +45,7 @@ public class Main {
 		
 		int reduce = Integer.parseInt(cmd.getOptionValue(opt_reduce, "4"));
 		boolean ditherFullbrights = Integer.parseInt(cmd.getOptionValue(opt_ditherfull, "0")) != 0;
+		boolean noLiquidFullbrights = Integer.parseInt(cmd.getOptionValue(opt_noliquidfullbrights, "1")) != 0;
 
 		
 		Converter conv = new Converter();
@@ -67,7 +70,7 @@ public class Main {
 
 		List<Thread> threads = new ArrayList<>();
 		for(int i = 0; i < Runtime.getRuntime().availableProcessors(); ++i) {
-			Thread t = new ConverterThread(colorMapFiles, conv, wad);
+			Thread t = new ConverterThread(colorMapFiles, conv, wad, noLiquidFullbrights);
 			threads.add(t);
 			t.start();
 		}
