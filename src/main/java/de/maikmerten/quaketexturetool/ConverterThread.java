@@ -3,7 +3,6 @@ package de.maikmerten.quaketexturetool;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Queue;
 
 /**
@@ -34,7 +33,7 @@ public class ConverterThread extends Thread {
 		while (true) {
 			File colorFile;
 			String name;
-			List<byte[][]> result;
+			byte[] result;
 
 			// get next job
 			synchronized (fileQueue) {
@@ -60,7 +59,6 @@ public class ConverterThread extends Thread {
 					normInput = new FileInputStream(normFile);
 				}
 
-
 				// try to find file with luminance information
 				String glowpath = basepath.substring(0, basepath.length() - 4) + "_glow.png";
 				InputStream glowInput = null;
@@ -79,7 +77,7 @@ public class ConverterThread extends Thread {
 
 				boolean ignoreFullbrights = isLiquid(name) && noLiquidFullbrights;
 
-				result = conv.convert(colorInput, normInput, glowInput, ignoreFullbrights);
+				result = conv.convert(colorInput, normInput, glowInput, name, ignoreFullbrights);
 
 				System.out.println(name);
 				if (name.length() > 15) {
@@ -91,13 +89,15 @@ public class ConverterThread extends Thread {
 				break;
 			}
 
-			// write result to WAD
-			synchronized (wad) {
-				try {
-					wad.addMipTexture(name, result);
-				} catch (Exception e) {
-					e.printStackTrace();
-					break;
+			if (result != null) {
+				// write result to WAD
+				synchronized (wad) {
+					try {
+						wad.addMipTexture(name, result);
+					} catch (Exception e) {
+						e.printStackTrace();
+						break;
+					}
 				}
 			}
 

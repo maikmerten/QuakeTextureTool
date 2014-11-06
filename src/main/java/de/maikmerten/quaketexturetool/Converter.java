@@ -1,7 +1,10 @@
 package de.maikmerten.quaketexturetool;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import javax.imageio.ImageIO;
@@ -18,8 +21,31 @@ public class Converter {
 	
 	private boolean ditherFullbrights = false;
 	private int reduce = 4;
+	
+	private class MipTexHeader extends StreamOutput {
+		private byte[] name = new byte[16]; // zero terminated
+		private int width; // 4 bytes, little endian
+		private int height; // 4 bytes, little endian
+		private int[] mipOffsets = new int[4]; // four MIPs, first offset: 40 (header length)
+		
+		private int getSize() {
+			return name.length + (2*4) + (mipOffsets.length * 4);
+		}
+			
+		
+		private void write(OutputStream os) throws Exception {
+			os.write(name);
+			writeLittle(width, os);
+			writeLittle(height, os);
+			for(int i = 0; i < mipOffsets.length; ++i) {
+				writeLittle(mipOffsets[i], os);
+			}
+		}
+		
+	}
+	
 
-	public List<byte[][]> convert(InputStream colorStream, InputStream normStream, InputStream glowStream, boolean ignoreFullbrights) throws Exception {
+	public byte[] convert(InputStream colorStream, InputStream normStream, InputStream glowStream, String name, boolean ignoreFullbrights) throws Exception {
 
 		BufferedImage colorImage = ImageIO.read(colorStream);
 		int width = colorImage.getWidth();
@@ -42,6 +68,11 @@ public class Converter {
 		width = width / getReduce();
 		height = height / getReduce();
 		
+		if(width % 16 != 0 || height % 16 != 0) {
+			System.out.println("Could not convert " + name + " as target dimensions are not multiples of 16.");
+			return null;
+		}
+		
 		List<byte[][]> mips = new ArrayList<>(4);
 		
 		// generate four MIP images
@@ -50,7 +81,33 @@ public class Converter {
 			mips.add(mip);
 		}
 		
-		return mips;
+		// generate MipTex data
+		MipTexHeader mipHead = new MipTexHeader();
+		byte[] namebytes = name.getBytes(Charset.forName("US-ASCII"));
+		for(int i = 0; i < Math.min(15, namebytes.length); ++i) {
+			mipHead.name[i] = namebytes[i];
+		}
+		mipHead.height = height;
+		mipHead.width = width;
+		
+		mipHead.mipOffsets = new int[mips.size()];
+		int offset = mipHead.getSize();
+		for(int i = 0; i < mips.size(); ++i) {
+			mipHead.mipOffsets[i] = offset;
+			byte[][] mip = mips.get(i);
+			offset += mip.length * mip[0].length;
+		}
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		mipHead.write(baos);
+		for(int i = 0; i < mips.size(); ++i) {
+			byte[][] mip = mips.get(i);
+			for(int x = 0; x < mip.length; ++x) {
+				baos.write(mip[x]);
+			}
+		}
+		
+		return baos.toByteArray();		
 	}
 	
 	private boolean isFullbright(BufferedImage glowImg, int x, int y) {
