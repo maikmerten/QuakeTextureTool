@@ -1,10 +1,8 @@
 package de.maikmerten.quaketexturetool;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import org.apache.commons.cli.CommandLine;
@@ -22,10 +20,9 @@ public class Main {
 	private final static String opt_reduce = "reduce";
 	private final static String opt_ditherfull = "ditherfullbrights";
 	private final static String opt_noliquidfullbrights = "noliquidfullbrights";
+	private final static String opt_output = "output";
 
 	public static void main(String[] args) throws Exception {
-		
-		
 		
 		// set up command line parsing
 		Options opts = new Options();
@@ -33,6 +30,7 @@ public class Main {
 		opts.addOption(opt_reduce, true, "Downsampling factor (default: 4)");
 		opts.addOption(opt_ditherfull, true, "Dither fullbrights (default: 0)");
 		opts.addOption(opt_noliquidfullbrights, true, "No fullbrights for liquids (default: 1)");
+		opts.addOption(opt_output, true, "file name for output WAD");
 		
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = parser.parse(opts, args);
@@ -43,9 +41,16 @@ public class Main {
 			System.exit(0);
 		}
 		
+		if(!cmd.hasOption(opt_output)) {
+			System.out.println("### You must specify an output file! ###");
+			System.out.println("Use the -h option to get a list of options.");
+			System.exit(1);
+		}
+		
 		int reduce = Integer.parseInt(cmd.getOptionValue(opt_reduce, "4"));
 		boolean ditherFullbrights = Integer.parseInt(cmd.getOptionValue(opt_ditherfull, "0")) != 0;
 		boolean noLiquidFullbrights = Integer.parseInt(cmd.getOptionValue(opt_noliquidfullbrights, "1")) != 0;
+		String outputFile = cmd.getOptionValue(opt_output);
 
 		
 		Converter conv = new Converter();
@@ -53,24 +58,15 @@ public class Main {
 		conv.setDitherFullbrights(ditherFullbrights);
 
 		File workingDir = new File(".");
-		File outputDir = new File(workingDir.getAbsoluteFile() + File.separator + "output" + File.separator);
-		if (!outputDir.exists()) {
-			outputDir.mkdirs();
-		}
-
-		Queue<File> colorMapFiles = new LinkedList<>();
-		FileFilter filefilter = new ColorMapFileFilter();
-		for (File f : workingDir.listFiles()) {
-			if(filefilter.accept(f)) {
-				colorMapFiles.add(f);
-			}
-		}
+		
+		FileFinder fileFinder = new FileFinder(workingDir);
+		Queue<File> colorMapFiles = fileFinder.findColorMaps();
 		
 		Wad wad = new Wad();
 
 		List<Thread> threads = new ArrayList<>();
 		for(int i = 0; i < Runtime.getRuntime().availableProcessors(); ++i) {
-			Thread t = new ConverterThread(colorMapFiles, conv, wad, noLiquidFullbrights);
+			Thread t = new ConverterThread(colorMapFiles, conv, wad, fileFinder, noLiquidFullbrights);
 			threads.add(t);
 			t.start();
 		}
@@ -80,7 +76,7 @@ public class Main {
 		}
 		
 		
-		File wadFile = new File(outputDir.getAbsolutePath() + File.separator + "output.wad");
+		File wadFile = new File(outputFile);
 		try (FileOutputStream fos = new FileOutputStream(wadFile)) {
 			wad.write(fos);
 		}
