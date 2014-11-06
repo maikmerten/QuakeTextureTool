@@ -1,8 +1,5 @@
 package de.maikmerten.quaketexturetool;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -71,11 +68,6 @@ public class Wad {
 	private class WadEntry {
 		private WadDirEntry dirEntry;
 		private byte[] data;
-		
-		private void write(OutputStream os) throws Exception {
-			dirEntry.write(os);
-			os.write(data);
-		}
 	}
 
 
