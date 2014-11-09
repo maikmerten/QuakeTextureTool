@@ -22,6 +22,10 @@ public class Converter {
 	private boolean ditherFullbrights = false;
 	private int reduce = 4;
 	
+	private DistanceCalculator distColor = new DistanceCalculator(DistanceCalculator.Method.RGB);
+	private DistanceCalculator distFullbright = new DistanceCalculator(DistanceCalculator.Method.YPRPB);
+
+
 	private class MipTexHeader extends StreamOutput {
 		private byte[] name = new byte[16]; // zero terminated
 		private int width; // 4 bytes, little endian
@@ -152,9 +156,9 @@ public class Converter {
 					double distance = Double.MAX_VALUE;
 					
 					if(firstIdx == PaletteQ1.fullbrightStart) {
-						distance = Color.getDistanceYPrPb(color1, color2);
+						distance = getDistFullbright().getDistance(color1, color2);
 					} else {
-						distance = Color.getDistanceYPrPb(color1, color2);
+						distance = getDistColor().getDistance(color1, color2);
 					}
 					
 					if (distance < minDistance) {
@@ -271,6 +275,22 @@ public class Converter {
 
 	public void setReduce(int reduce) {
 		this.reduce = reduce;
+	}
+	
+	public DistanceCalculator getDistColor() {
+		return distColor;
+	}
+
+	public void setDistColor(DistanceCalculator distColor) {
+		this.distColor = distColor;
+	}
+
+	public DistanceCalculator getDistFullbright() {
+		return distFullbright;
+	}
+
+	public void setDistFullbright(DistanceCalculator distFullbright) {
+		this.distFullbright = distFullbright;
 	}
 
 }
