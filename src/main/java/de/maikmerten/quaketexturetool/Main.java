@@ -20,7 +20,7 @@ public class Main {
 	private final static String opt_reduce = "reduce";
 	private final static String opt_ditherfull = "ditherfullbrights";
 	private final static String opt_ditherstrength = "ditherstrength";
-	private final static String opt_noliquidfullbrights = "noliquidfullbrights";
+	private final static String opt_liquidfullbrights = "noliquidfullbrights";
 	private final static String opt_output = "output";
 
 	public static void main(String[] args) throws Exception {
@@ -31,7 +31,7 @@ public class Main {
 		opts.addOption(opt_reduce, true, "Downsampling factor (default: 4)");
 		opts.addOption(opt_ditherfull, true, "Dither fullbrights (default: 0)");
 		opts.addOption(opt_ditherstrength, true, "Dither strength (default: 0.25)");
-		opts.addOption(opt_noliquidfullbrights, true, "No fullbrights for liquids (default: 1)");
+		opts.addOption(opt_liquidfullbrights, true, "Fullbrights for liquids (default: 0)");
 		opts.addOption(opt_output, true, "file name for output WAD");
 		
 		CommandLineParser parser = new PosixParser();
@@ -55,7 +55,7 @@ public class Main {
 		if(cmd.hasOption(opt_ditherstrength)) {
 			ditherStrength = Float.parseFloat(cmd.getOptionValue(opt_ditherstrength));
 		}
-		boolean noLiquidFullbrights = Integer.parseInt(cmd.getOptionValue(opt_noliquidfullbrights, "1")) != 0;
+		boolean noLiquidFullbrights = Integer.parseInt(cmd.getOptionValue(opt_liquidfullbrights, "0")) == 0;
 		String outputFile = cmd.getOptionValue(opt_output);
 
 		
