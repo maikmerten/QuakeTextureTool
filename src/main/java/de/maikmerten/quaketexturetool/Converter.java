@@ -20,6 +20,7 @@ public class Converter {
 	private final boolean showFullbright = !true;
 	
 	private boolean ditherFullbrights = false;
+	private float ditherStrength = 0.25f;
 	private int reduce = 4;
 	
 	private DistanceCalculator distColor = new DistanceCalculator(DistanceCalculator.Method.RGB);
@@ -215,9 +216,13 @@ public class Converter {
 	
 	private void dither(BufferedImage img, int x, int y, int targetColor, int actualColor, BufferedImage glowImg) {
 
-		int dR = Color.getR(targetColor) - Color.getR(actualColor);
-		int dG = Color.getG(targetColor) - Color.getG(actualColor);
-		int dB = Color.getB(targetColor) - Color.getB(actualColor);
+		if(ditherStrength < 0.001) {
+			return;
+		}
+		
+		float dR = (Color.getR(targetColor) - Color.getR(actualColor)) * ditherStrength;
+		float dG = (Color.getG(targetColor) - Color.getG(actualColor)) * ditherStrength;
+		float dB = (Color.getB(targetColor) - Color.getB(actualColor)) * ditherStrength;
 
 		if ((x + 1) < img.getWidth() && !(isFullbright(glowImg, x + 1, y) && !ditherFullbrights)) {
 			float w = 7f / 16f;
@@ -267,6 +272,14 @@ public class Converter {
 
 	public void setDitherFullbrights(boolean ditherFullbrights) {
 		this.ditherFullbrights = ditherFullbrights;
+	}
+	
+	public float getDitherStrength() {
+		return ditherStrength;
+	}
+	
+	public void setDitherStrength(float ditherStrength) {
+		this.ditherStrength = ditherStrength;
 	}
 
 	public int getReduce() {

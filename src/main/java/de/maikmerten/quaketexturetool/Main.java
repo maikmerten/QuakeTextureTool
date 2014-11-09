@@ -19,6 +19,7 @@ public class Main {
 	
 	private final static String opt_reduce = "reduce";
 	private final static String opt_ditherfull = "ditherfullbrights";
+	private final static String opt_ditherstrength = "ditherstrength";
 	private final static String opt_noliquidfullbrights = "noliquidfullbrights";
 	private final static String opt_output = "output";
 
@@ -29,6 +30,7 @@ public class Main {
 		opts.addOption("h", "help", false, "Displays help");
 		opts.addOption(opt_reduce, true, "Downsampling factor (default: 4)");
 		opts.addOption(opt_ditherfull, true, "Dither fullbrights (default: 0)");
+		opts.addOption(opt_ditherstrength, true, "Dither strength (default: 0.25)");
 		opts.addOption(opt_noliquidfullbrights, true, "No fullbrights for liquids (default: 1)");
 		opts.addOption(opt_output, true, "file name for output WAD");
 		
@@ -49,6 +51,10 @@ public class Main {
 		
 		int reduce = Integer.parseInt(cmd.getOptionValue(opt_reduce, "4"));
 		boolean ditherFullbrights = Integer.parseInt(cmd.getOptionValue(opt_ditherfull, "0")) != 0;
+		float ditherStrength = 0.25f;
+		if(cmd.hasOption(opt_ditherstrength)) {
+			ditherStrength = Float.parseFloat(cmd.getOptionValue(opt_ditherstrength));
+		}
 		boolean noLiquidFullbrights = Integer.parseInt(cmd.getOptionValue(opt_noliquidfullbrights, "1")) != 0;
 		String outputFile = cmd.getOptionValue(opt_output);
 
@@ -56,6 +62,7 @@ public class Main {
 		Converter conv = new Converter();
 		conv.setReduce(reduce);
 		conv.setDitherFullbrights(ditherFullbrights);
+		conv.setDitherStrength(ditherStrength);
 
 		File workingDir = new File(".");
 		
