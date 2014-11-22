@@ -32,6 +32,33 @@ public class Color {
 	public static int getB(int rgb) {
 		return rgb & 0xFF;
 	}
+	
+	public static double getHue(int rgb) {
+		int r = getR(rgb);
+		int g = getG(rgb);
+		int b = getB(rgb);
+
+		// hue in degrees, not radiants
+		return Math.atan2(Math.sqrt(3) * (g - b), 2 * r - g - b);
+	}
+	
+	public static double getSaturation(int rgb) {
+		int r = getR(rgb);
+		int g = getG(rgb);
+		int b = getB(rgb);
+		
+		
+		int min = Math.min(r, g);
+		min = Math.min(min, b);
+		
+		int max = Math.max(r, g);
+		max = Math.max(max, b);
+		
+		double c = max - min;
+		double v = max;
+		
+		return v == 0.0 ? 0.0 : (c / v);
+	}
 
 	public static double getY(int rgb) {
 		int r1 = getR(rgb);
@@ -40,7 +67,7 @@ public class Color {
 
 		return (0.299 * r1 + 0.587 * g1 + 0.114 * b1) / 263.0;
 	}
-
+	
 	public static double getDistanceYPrPb(int color1, int color2) {
 
 		int r1 = getR(color1);
@@ -73,6 +100,24 @@ public class Color {
 		int bdiff = getB(color1) - getB(color2);
 		
 		return rdiff*rdiff + gdiff*gdiff + bdiff*bdiff;
+	}
+	
+	public static double getDistanceHSY(int color1, int color2) {
+		double h1 = getHue(color1);
+		double h2 = getHue(color2);
+		
+		double s1 = getSaturation(color1);
+		double s2 = getSaturation(color2);
+		
+		double y1 = getY(color1);
+		double y2 = getY(color2);
+		
+		double h_dist = Math.abs(h1 - h2);
+		double s_dist = Math.abs(s1 - s2);
+		double y_dist = Math.abs(y1 - y2);
+		
+		// weights are completely arbitrary!
+		return (h_dist * 50) + (s_dist * 10) + (y_dist * 90);
 	}
 
 	public static int add(int color1, int color2) {

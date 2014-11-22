@@ -8,7 +8,8 @@ public class DistanceCalculator {
 	
 	public static enum Method {
 		RGB,
-		YPRPB
+		YPRPB,
+		HSY,
 	}
 	
 	private final Method method;
@@ -21,8 +22,10 @@ public class DistanceCalculator {
 	public double getDistance(int color1, int color2) {
 		if(method.equals(Method.RGB)) {
 			return Color.getDistancePlain(color1, color2);
-		} else {
+		} else if(method.equals(Method.YPRPB)) {
 			return Color.getDistanceYPrPb(color1, color2);
+		} else {
+			return Color.getDistanceHSY(color1, color2);
 		}
 	}
 	

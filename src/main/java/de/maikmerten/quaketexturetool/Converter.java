@@ -24,7 +24,7 @@ public class Converter {
 	private int reduce = 4;
 	
 	private DistanceCalculator distColor = new DistanceCalculator(DistanceCalculator.Method.RGB);
-	private DistanceCalculator distFullbright = new DistanceCalculator(DistanceCalculator.Method.RGB);
+	private DistanceCalculator distFullbright = new DistanceCalculator(DistanceCalculator.Method.HSY);
 
 
 	private class MipTexHeader extends StreamOutput {
