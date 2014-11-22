@@ -2,6 +2,7 @@ package de.maikmerten.quaketexturetool;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Queue;
@@ -44,7 +45,7 @@ public class FileFinder {
 	}
 
 	public Queue<File> findColorMaps() {
-		Queue<File> files = new LinkedList<>();
+		LinkedList<File> files = new LinkedList<>();
 		FileFilter filter = new ColorMapFileFilter();
 
 		for(File f : baseDir.listFiles()) {
@@ -52,6 +53,8 @@ public class FileFinder {
 				files.add(f);
 			}
 		}
+		
+		Collections.sort(files);
 
 		return files;
 	}
