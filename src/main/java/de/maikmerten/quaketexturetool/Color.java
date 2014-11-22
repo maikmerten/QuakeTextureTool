@@ -113,6 +113,8 @@ public class Color {
 		double y2 = getY(color2);
 		
 		double h_dist = Math.abs(h1 - h2);
+		h_dist = Math.min(h_dist, 360.0 - h_dist);
+		
 		double s_dist = Math.abs(s1 - s2);
 		double y_dist = Math.abs(y1 - y2);
 		
