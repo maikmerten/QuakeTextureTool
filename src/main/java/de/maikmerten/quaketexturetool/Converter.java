@@ -16,7 +16,7 @@ import org.imgscalr.Scalr;
  */
 public class Converter {
 
-	private final double fullbrightThresh = 0.01;
+	private final double fullbrightThresh = 0.025;
 	private final boolean showFullbright = !true;
 	
 	private boolean ditherFullbrights = false;

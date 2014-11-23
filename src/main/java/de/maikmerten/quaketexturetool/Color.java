@@ -119,7 +119,7 @@ public class Color {
 		double y_dist = Math.abs(y1 - y2);
 		
 		// weights are completely arbitrary!
-		return (h_dist * 50) + (s_dist * 10) + (y_dist * 90);
+		return (h_dist * 45) + (s_dist * 10) + (y_dist * 100);
 	}
 
 	public static int add(int color1, int color2) {
