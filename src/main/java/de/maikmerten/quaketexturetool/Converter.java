@@ -182,18 +182,36 @@ public class Converter {
 	
 
 	public BufferedImage renderImage(BufferedImage colorImage, BufferedImage normImage, BufferedImage glowImage) {
-		BufferedImage img = new BufferedImage(colorImage.getWidth(), colorImage.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
+		BufferedImage img = new BufferedImage(colorImage.getWidth(), colorImage.getHeight(), BufferedImage.TYPE_INT_RGB);
 		Vec3 light = new Vec3(0.25, 0.25, 1);
 		Vec3 normal = new Vec3(0, 0, 1);
 		light.normalize();
 
+		// make sure that the images are of a proper type (e.g., not indexed) by rendering
+		// them onto new buffered images
+		BufferedImage colorImageConverted = new BufferedImage(colorImage.getWidth(), colorImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+		colorImageConverted.getGraphics().drawImage(colorImage, 0, 0, null);
+		
+		BufferedImage normImageConverted = null;
+		if(normImage != null) {
+			normImageConverted = new BufferedImage(normImage.getWidth(), normImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+			normImageConverted.getGraphics().drawImage(normImage, 0, 0, null);
+		}
+		
+		BufferedImage glowImageConverted = null;
+		if(glowImage != null) {
+			glowImageConverted = new BufferedImage(glowImage.getWidth(), glowImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+			glowImageConverted.getGraphics().drawImage(glowImage, 0, 0, null);
+		}
+		
+		
 		for (int x = 0; x < colorImage.getWidth(); ++x) {
 			for (int y = 0; y < colorImage.getHeight(); ++y) {
-				int color = colorImage.getRGB(x, y);
+				int color = colorImageConverted.getRGB(x, y);
 				
-				if(normImage != null) {
+				if(normImageConverted != null) {
 					// read surface normal
-					int normrgb = normImage.getRGB(x, y);
+					int normrgb = normImageConverted.getRGB(x, y);
 					normal.setValues(Color.getR(normrgb), Color.getG(normrgb), Color.getB(normrgb));
 					normal.normalize();
 
@@ -202,8 +220,8 @@ public class Converter {
 				}
 
 				// add glow map
-				if (glowImage != null) {
-					int glow = glowImage.getRGB(x, y);
+				if (glowImageConverted != null) {
+					int glow = glowImageConverted.getRGB(x, y);
 					color = Color.add(color, glow);
 				}
 
