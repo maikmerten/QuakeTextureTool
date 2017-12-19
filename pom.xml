@@ -73,9 +73,9 @@
 							<mainClass>de.maikmerten.quaketexturetool.Main</mainClass>
 						</manifest>
 					</archive>
-					<includes>
+					<!--includes>
 						<include>../README.txt</include>
-					</includes>
+					</includes-->
 				</configuration>
 			</plugin>
 			
