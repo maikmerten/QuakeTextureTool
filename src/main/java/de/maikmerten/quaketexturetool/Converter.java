@@ -72,7 +72,11 @@ public class Converter {
 		
 		width = width / getReduce();
 		height = height / getReduce();
+                
+                width &= 0xFFFFFFF0;
+                height &= 0xFFFFFFF0;
 		
+                // this should never be possible
 		if(width % 16 != 0 || height % 16 != 0) {
 			System.out.println("Could not convert " + name + " as target dimensions are not multiples of 16.");
 			return null;
