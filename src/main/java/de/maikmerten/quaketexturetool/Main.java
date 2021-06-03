@@ -28,7 +28,7 @@ public class Main {
 		// set up command line parsing
 		Options opts = new Options();
 		opts.addOption("h", "help", false, "Displays help");
-		opts.addOption(opt_reduce, true, "Downsampling factor (default: 4)");
+		opts.addOption(opt_reduce, true, "Downsampling factor (default: 1)");
 		opts.addOption(opt_ditherfull, true, "Dither fullbrights (default: 0)");
 		opts.addOption(opt_ditherstrength, true, "Dither strength (default: 0.25)");
 		opts.addOption(opt_liquidfullbrights, true, "Allow fullbrights on liquids (default: 0)");
@@ -49,7 +49,7 @@ public class Main {
 			System.exit(1);
 		}
 		
-		int reduce = Integer.parseInt(cmd.getOptionValue(opt_reduce, "4"));
+		int reduce = Integer.parseInt(cmd.getOptionValue(opt_reduce, "1"));
 		boolean ditherFullbrights = Integer.parseInt(cmd.getOptionValue(opt_ditherfull, "0")) != 0;
 		float ditherStrength = 0.25f;
 		if(cmd.hasOption(opt_ditherstrength)) {
