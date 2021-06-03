@@ -15,8 +15,4 @@ Following files are supported:
    and be converted to the "fullbright" part of the Quake palette.
 
 
-By default texture dimensions will be reduced by a factor of four, so a texture
-with 512 x 512 pixels will result in a 128 x 128 output. This can be changed
-via commandline arguments.
-
 A complete list of arguments is available via the "-h" option.
