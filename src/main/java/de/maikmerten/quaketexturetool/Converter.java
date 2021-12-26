@@ -88,10 +88,10 @@ public class Converter {
         }
 
         List<byte[][]> mips = new ArrayList<>(4);
-
+        
         // generate four MIP images
         for (int i = 0; i < 4; ++i) {
-            byte[][] mip = createMip(img, glowImage, (width >> i), (height >> i), ignoreFullbrights);
+            byte[][] mip = createMip(img, glowImage, (width >> i), (height >> i), ignoreFullbrights, name.startsWith("{"));
             mips.add(mip);
         }
 
@@ -134,19 +134,32 @@ public class Converter {
         return luma > fullbrightThresh;
     }
 
-    private byte[][] createMip(BufferedImage renderedImage, BufferedImage glowImage, int width, int height, boolean ignoreFullbrights) {
+    private byte[][] createMip(BufferedImage renderedImage, BufferedImage glowImage, int width, int height, boolean ignoreFullbrights, boolean transparent) {
         byte[][] mip = new byte[height][width];
 
         // resize to requested dimensions
         BufferedImage img = resampleImage(renderedImage, width, height);
         BufferedImage glowResampled = resampleImage(glowImage, width, height);
+        
+        boolean[][] transparentMap = null;
+        if(transparent) {
+            transparentMap = new boolean[img.getWidth()][img.getHeight()];
+            for(int x = 0; x < img.getWidth(); x++) {
+                for(int y = 0; y < img.getHeight(); y++) {
+                    int a = (img.getRGB(x, y) >> 24) & 0xFF;
+                    if(a < 128) {
+                        transparentMap[x][y] = true;
+                    }
+                }
+            }            
+        }
 
         // reduce to Quake palette
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 double minDistance = Double.MAX_VALUE;
                 int index = 0;
-                int color1 = img.getRGB(x, y);
+                final int color1 = img.getRGB(x, y);
 
                 int firstIdx = 0;
                 int lastIdx = PaletteQ1.fullbrightStart - 1;
@@ -181,7 +194,18 @@ public class Converter {
                 if (firstIdx < PaletteQ1.fullbrightStart || getDitherFullbrights()) {
                     dither(img, x, y, color1, PaletteQ1.colors[index], glowResampled);
                 }
-
+            }
+        }
+        
+        // special case: texture with transparent parts
+        if(transparent) {
+            for(int x = 0; x < img.getWidth(); x++) {
+                for(int y = 0; y < img.getHeight(); y++) {
+                    boolean t = transparentMap[x][y];
+                    if(t) {
+                        mip[y][x] = (byte) 255;
+                    }
+                }
             }
         }
 
@@ -189,14 +213,14 @@ public class Converter {
     }
 
     public BufferedImage renderImage(BufferedImage colorImage, BufferedImage normImage, BufferedImage glowImage) {
-        BufferedImage img = new BufferedImage(colorImage.getWidth(), colorImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+        BufferedImage img = new BufferedImage(colorImage.getWidth(), colorImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Vec3 light = new Vec3(0.25, 0.25, 1);
         Vec3 normal = new Vec3(0, 0, 1);
         light.normalize();
 
         // make sure that the images are of a proper type (e.g., not indexed) by rendering
         // them onto new buffered images
-        BufferedImage colorImageConverted = new BufferedImage(colorImage.getWidth(), colorImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+        BufferedImage colorImageConverted = new BufferedImage(colorImage.getWidth(), colorImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
         colorImageConverted.getGraphics().drawImage(colorImage, 0, 0, null);
 
         BufferedImage normImageConverted = null;
@@ -285,7 +309,7 @@ public class Converter {
         if (img.getWidth() == width && img.getHeight() == height) {
             return img;
         }
-
+        
         return Scalr.resize(img, Scalr.Method.QUALITY, width, height);
     }
 
